@@ -35,6 +35,9 @@ json CreateMainMenuMarkup() {
     return {
         {"inline_keyboard", {
             {
+                {{"text", "🎮 Chơi Trong Mini App (Đồ Họa 3D)", {"web_app", {{"url", "https://hanhk112023-jpg.github.io/pokemon-twa/"}}}}}
+            },
+            {
                 {{"text", "📦 Mở Thẻ Bài (Gacha)", {"callback_data", "menu_gacha"}}},
                 {{"text", "⚔️ Đấu Trường (Battle)", {"callback_data", "menu_battle"}}}
             },
