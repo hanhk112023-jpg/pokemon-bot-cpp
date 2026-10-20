@@ -1,0 +1,72 @@
+name: Run Pokémon C++ Telegram Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Backup trigger every 5 hours if not self-retriggered
+    - cron: '0 */5 * * *'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: pokemon-telegram-bot
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # Max limit under 6h
+
+    steps:
+      - name: Checkout Code & Player Data
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install C++ Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcurl4-openssl-dev nlohmann-json3-dev
+
+      - name: Build Pokémon Bot Binary
+        run: |
+          make clean
+          make
+
+      - name: Execute Pokémon Bot (5-Hour Cycle)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "::error::Chưa thiết lập secret TELEGRAM_BOT_TOKEN! Hãy thêm secret vào repository Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          echo "🚀 Khởi động Pokémon C++ Bot trên GitHub Actions..."
+          # Run for 18000 seconds (5 hours) then exit gracefully to commit state and retrigger
+          ./pokemon_bot --token "$TELEGRAM_BOT_TOKEN" --max-seconds 18000
+
+      - name: Commit & Push Player Data
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/players.json
+          if git diff --staged --quiet; then
+            echo "Không có thay đổi dữ liệu người chơi."
+          else
+            git commit -m "chore: save player game state [skip ci]"
+            git push origin main
+            echo "Đã lưu dữ liệu người chơi thành công lên repository!"
+          fi
+
+      - name: Self-Retrigger Next Bot Cycle (Keep 24/7 Alive)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔄 Kích hoạt chu kỳ tiếp theo để duy trì bot hoạt động 24/7..."
+          gh workflow run bot.yml --ref main || true
