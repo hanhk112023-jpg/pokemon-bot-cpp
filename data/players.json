@@ -1,3 +1,24 @@
 {
-  "players": []
+  "players": [
+    {
+      "activeInstanceId": "card_7356269758_starter",
+      "battlesLost": 0,
+      "battlesWon": 0,
+      "cards": [
+        {
+          "exp": 0,
+          "instanceId": "card_7356269758_starter",
+          "level": 1,
+          "pokemonId": 25,
+          "pulledAt": "starter"
+        }
+      ],
+      "coins": 300,
+      "firstName": "Ttt",
+      "lastDailyClaim": 0,
+      "packsOpened": 0,
+      "userId": 7356269758,
+      "username": ""
+    }
+  ]
 }
